@@ -94,6 +94,9 @@ void BLEManager::CharCallbacks::onWrite(BLECharacteristic *chr)
     case 0x0b:
         pack_.toggleCronometro();
         break;
+    case 0x0d:
+        pack_.zerar();
+        break;
     default: /* comando desconhecido */
         break;
     }

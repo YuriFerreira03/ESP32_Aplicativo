@@ -40,6 +40,8 @@ public:
     // cronômetro
     void toggleCronometro();
     void updateCronometro();
+    // zerar
+    void zerar();
     uint8_t *data() { return reinterpret_cast<uint8_t *>(&pack_); }
     size_t size() const { return sizeof(pack_); }
     static const uint8_t cnum[];
@@ -47,6 +49,8 @@ public:
 private:
     placar_info_t pack_;
     int gols_;
+    int setA_ = 0;
+    int setB_ = 0;
     int golsB_;
     bool cronometroRunning_{false};
     unsigned long lastCronoMillis_{0};

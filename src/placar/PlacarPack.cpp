@@ -43,10 +43,9 @@ void PlacarPack::atualizarBytesGols()
 // SET/FALTAS A (2 dígitos), tens=0 use 0xBF
 void PlacarPack::incrementarSetFaltasA()
 {
-    static int setA = 0;
-    setA = (setA + 1) % 100;
-    int tens = setA / 10;
-    int ones = setA % 10;
+    setA_ = (setA_ + 1) % 100;
+    int tens = setA_ / 10;
+    int ones = setA_ % 10;
     pack_.setfaltas[0] = (tens == 0 ? 0xBF : cnum[tens]);
     pack_.setfaltas[1] = cnum[ones];
 }
@@ -72,9 +71,8 @@ void PlacarPack::toggleServicoA()
 // SET/FALTAS B (2 dígitos)
 void PlacarPack::incrementarSetFaltasB()
 {
-    static int setB = 0;
-    setB = (setB + 1) % 100;
-    int tens = setB / 10, ones = setB % 10;
+    setB_ = (setB_ + 1) % 100;
+    int tens = setB_ / 10, ones = setB_ % 10;
     pack_.setfaltasb[0] = (tens == 0 ? 0xBF : cnum[tens]);
     pack_.setfaltasb[1] = cnum[ones];
 }
@@ -142,6 +140,47 @@ void PlacarPack::updateCronometro()
     pack_.cronometro[1] = cnum[m % 10];
     pack_.cronometro[2] = cnum[s / 10];
     pack_.cronometro[3] = cnum[s % 10];
+}
+
+// zerar placar
+
+void PlacarPack::zerar()
+{
+    // Zera gols e cronômetro
+    gols_ = 0;
+    golsB_ = 0;
+    cronoSeconds_ = 0;
+    cronometroRunning_ = false;
+
+    setA_ = 0; // Zera set/faltas A
+    setB_ = 0; // Zera set/faltas B
+
+    // Zera set/faltas (equipe A e B)
+    pack_.setfaltas[0] = 0xBF;    // Dezena (0xBF = vazio)
+    pack_.setfaltas[1] = cnum[0]; // Unidade (0xB0 = zero)
+    pack_.setfaltasb[0] = 0xBF;
+    pack_.setfaltasb[1] = cnum[0];
+
+    // Zera pedidos de tempo (equipe A e B)
+    pack_.tempoaA[0] = cnum[0]; // 0xB0
+    pack_.tempoaB[0] = cnum[0];
+
+    // Zera serviço (volta para "sem")
+    pack_.servico[0] = cnum[0]; // 0xB0
+
+    // Zera placar principal (equipe A e B)
+    pack_.equipeA[0] = 0xBF;
+    pack_.equipeA[1] = cnum[0];
+    pack_.equipeA[2] = cnum[0];
+    pack_.equipeB[0] = 0xBF;
+    pack_.equipeB[1] = cnum[0];
+    pack_.equipeB[2] = cnum[0];
+
+    // Zera cronômetro (00:00)
+    pack_.cronometro[0] = cnum[0];
+    pack_.cronometro[1] = cnum[0];
+    pack_.cronometro[2] = cnum[0];
+    pack_.cronometro[3] = cnum[0];
 }
 
 void PlacarPack::calcularCRC()
