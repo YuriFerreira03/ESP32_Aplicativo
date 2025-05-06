@@ -45,6 +45,9 @@ public:
     uint8_t *data() { return reinterpret_cast<uint8_t *>(&pack_); }
     size_t size() const { return sizeof(pack_); }
     static const uint8_t cnum[];
+    // alarme
+    void alarme();
+    void avancarPeriodo();
 
 private:
     placar_info_t pack_;
@@ -57,4 +60,8 @@ private:
     unsigned int cronoSeconds_{0};
     uint8_t calcularCRC8(uint8_t *data, size_t length, uint8_t poly = 0x01, uint8_t init = 0x80);
     void atualizarBytesGols();
+    bool alarmeLigado_{false};
+    int periodoAtual_ = 1; // 1-5 ou códigos especiais
+    bool tempoExtra_ = false;
+    bool penaltis_ = false;
 };

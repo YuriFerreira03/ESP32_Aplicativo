@@ -43,18 +43,22 @@ void PlacarPack::atualizarBytesGols()
 // SET/FALTAS A (2 dígitos), tens=0 use 0xBF
 void PlacarPack::incrementarSetFaltasA()
 {
-    setA_ = (setA_ + 1) % 100;
+    // Limita a 20 e reinicia em 0 após atingir o máximo
+    setA_ = (setA_ + 1) % 21;
+
     int tens = setA_ / 10;
     int ones = setA_ % 10;
-    pack_.setfaltas[0] = (tens == 0 ? 0xBF : cnum[tens]);
-    pack_.setfaltas[1] = cnum[ones];
+
+    // Atualiza conforme o protocolo do Python
+    pack_.setfaltas[0] = (tens == 0 ? 0xBF : cnum[tens]); // 16º byte (dezenas)
+    pack_.setfaltas[1] = cnum[ones];                      // 17º byte (unidades)
 }
 
 // P. TEMP A (1 dígito), use cnum e 0xB0 para zero
 void PlacarPack::incrementarPedidoTempoA()
 {
     static int tempoA = 0;
-    tempoA = (tempoA + 1) % 10;
+    tempoA = (tempoA + 1) % 3;
     pack_.tempoaA[0] = cnum[tempoA]; // cnum[0]==0xB0, cnum[1]==0x31…
 }
 
@@ -71,10 +75,15 @@ void PlacarPack::toggleServicoA()
 // SET/FALTAS B (2 dígitos)
 void PlacarPack::incrementarSetFaltasB()
 {
-    setB_ = (setB_ + 1) % 100;
-    int tens = setB_ / 10, ones = setB_ % 10;
-    pack_.setfaltasb[0] = (tens == 0 ? 0xBF : cnum[tens]);
-    pack_.setfaltasb[1] = cnum[ones];
+    // Limita a 20 e reinicia em 0 após atingir o máximo
+    setB_ = (setB_ + 1) % 21;
+
+    int tens = setB_ / 10;
+    int ones = setB_ % 10;
+
+    // Atualiza conforme o protocolo do Python
+    pack_.setfaltasb[0] = (tens == 0 ? 0xBF : cnum[tens]); // 16º byte (dezenas)
+    pack_.setfaltasb[1] = (ones == 0) ? 0xB0 : cnum[ones]; // 17º byte (unidades)
 }
 
 // SERVIÇO B toggle: “sem”=cnum[0], “B”=cnum[2]
@@ -87,7 +96,7 @@ void PlacarPack::toggleServicoB()
 void PlacarPack::incrementarPedidoTempoB()
 {
     static int tempoB = 0;
-    tempoB = (tempoB + 1) % 10;
+    tempoB = (tempoB + 1) % 3;
     pack_.tempoaB[0] = cnum[tempoB];
 }
 
@@ -181,6 +190,53 @@ void PlacarPack::zerar()
     pack_.cronometro[1] = cnum[0];
     pack_.cronometro[2] = cnum[0];
     pack_.cronometro[3] = cnum[0];
+
+    // zerar alarme
+    alarmeLigado_ = false;
+    pack_.alarme[0] = 0xBA; // 0xBA = alarme desligado
+
+    // Zera período (1)
+    periodoAtual_ = 1;
+    pack_.periodo[0] = cnum[1]; // 0x31 = 1
+}
+
+// alarme
+void PlacarPack::alarme()
+{
+    alarmeLigado_ = !alarmeLigado_;
+    pack_.alarme[0] = alarmeLigado_ ? 0xB3 : 0xBA;
+}
+
+// periodo
+
+void PlacarPack::avancarPeriodo()
+{
+    if (penaltis_)
+    {
+        // Se já está em pênaltis, volta para o 1º período
+        periodoAtual_ = 1;
+        tempoExtra_ = false;
+        penaltis_ = false;
+        pack_.periodo[0] = cnum[1];
+    }
+    else if (tempoExtra_)
+    {
+        // Se estava em tempo extra, vai para pênaltis
+        penaltis_ = true;
+        pack_.periodo[0] = 0xD0; // Código para "PENALTIS"
+    }
+    else if (periodoAtual_ >= 5)
+    {
+        // Depois do 5º período, vai para tempo extra
+        tempoExtra_ = true;
+        pack_.periodo[0] = 0x45; // Código para "TEMPO EXTRA"
+    }
+    else
+    {
+        // Avança período normal (1-5)
+        periodoAtual_++;
+        pack_.periodo[0] = cnum[periodoAtual_]; // Usa o array cnum
+    }
 }
 
 void PlacarPack::calcularCRC()

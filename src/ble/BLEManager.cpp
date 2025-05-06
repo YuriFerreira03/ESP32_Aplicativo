@@ -44,7 +44,9 @@ bool BLEManager::isConnected() const
 void BLEManager::ServerCallbacks::onConnect(BLEServer *srv)
 {
     parent_.deviceConnected_ = true;
-    parent_.pack_.incrementarGols(); // zera/inicializa se quiser
+    parent_.pack_.alarme();
+    delay(1000);
+    parent_.pack_.alarme();
 }
 void BLEManager::ServerCallbacks::onDisconnect(BLEServer *srv)
 {
@@ -97,7 +99,13 @@ void BLEManager::CharCallbacks::onWrite(BLECharacteristic *chr)
     case 0x0d:
         pack_.zerar();
         break;
+    case 0x0c:
+        pack_.alarme();
+        break;
     default: /* comando desconhecido */
+        break;
+    case 0x0e:
+        pack_.avancarPeriodo();
         break;
     }
 }
