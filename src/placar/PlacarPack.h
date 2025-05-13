@@ -39,6 +39,7 @@ public:
     void calcularCRC();
     // cronômetro
     void toggleCronometro();
+    void setCronometroPreset(uint8_t minutos);
     void updateCronometro();
     // zerar
     void zerar();
@@ -64,4 +65,5 @@ private:
     int periodoAtual_ = 1; // 1-5 ou códigos especiais
     bool tempoExtra_ = false;
     bool penaltis_ = false;
+    bool countdownMode_{false};
 };

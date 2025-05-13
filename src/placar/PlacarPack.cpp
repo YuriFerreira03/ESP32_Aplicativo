@@ -126,7 +126,8 @@ void PlacarPack::decrementarGolsB()
 void PlacarPack::toggleCronometro()
 {
     cronometroRunning_ = !cronometroRunning_;
-    lastCronoMillis_ = millis();
+    if (cronometroRunning_)
+        lastCronoMillis_ = millis();
 }
 
 // Deve ser chamado todo loop para avançar o timer
@@ -139,12 +140,27 @@ void PlacarPack::updateCronometro()
     if (delta < 1000)
         return;
     unsigned int secs = delta / 1000;
-    cronoSeconds_ += secs;
     lastCronoMillis_ += secs * 1000;
+
+    if (countdownMode_)
+    {
+        if (cronoSeconds_ == 0)
+        {
+            cronometroRunning_ = false;
+            countdownMode_ = false;
+            return;
+        }
+        if (secs > cronoSeconds_)
+            secs = cronoSeconds_;
+        cronoSeconds_ -= secs; // conta-para-trás
+    }
+    else
+    {
+        cronoSeconds_ += secs; // conta-para-frente
+    }
 
     unsigned int m = cronoSeconds_ / 60;
     unsigned int s = cronoSeconds_ % 60;
-    // atualiza os 4 bytes de cronômetro no struct
     pack_.cronometro[0] = cnum[m / 10];
     pack_.cronometro[1] = cnum[m % 10];
     pack_.cronometro[2] = cnum[s / 10];
@@ -160,6 +176,7 @@ void PlacarPack::zerar()
     golsB_ = 0;
     cronoSeconds_ = 0;
     cronometroRunning_ = false;
+    countdownMode_ = false;
 
     setA_ = 0; // Zera set/faltas A
     setB_ = 0; // Zera set/faltas B
@@ -237,6 +254,18 @@ void PlacarPack::avancarPeriodo()
         periodoAtual_++;
         pack_.periodo[0] = cnum[periodoAtual_]; // Usa o array cnum
     }
+}
+
+void PlacarPack::setCronometroPreset(uint8_t minutos)
+{
+    cronoSeconds_ = minutos * 60; // carrega MM:00
+    countdownMode_ = true;        // modo regressivo
+    cronometroRunning_ = false;   // só começa quando receber 0x0B
+
+    pack_.cronometro[0] = cnum[minutos / 10];
+    pack_.cronometro[1] = cnum[minutos % 10];
+    pack_.cronometro[2] = cnum[0];
+    pack_.cronometro[3] = cnum[0];
 }
 
 void PlacarPack::calcularCRC()

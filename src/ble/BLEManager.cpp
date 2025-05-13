@@ -107,5 +107,23 @@ void BLEManager::CharCallbacks::onWrite(BLECharacteristic *chr)
     case 0x0e:
         pack_.avancarPeriodo();
         break;
+    case 0x0F:
+        pack_.setCronometroPreset(5);
+        break;
+    case 0x10:
+        pack_.setCronometroPreset(7);
+        break;
+    case 0x11:
+        pack_.setCronometroPreset(10);
+        break;
+    case 0x12:
+        pack_.setCronometroPreset(15);
+        break;
+    case 0x13:
+        pack_.setCronometroPreset(20);
+        break;
+    case 0x14:
+        pack_.setCronometroPreset(30);
+        break;
     }
 }
